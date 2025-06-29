@@ -1,0 +1,85 @@
+name: Tests execution
+on:
+    workflow_call: 
+jobs:
+    Unit-Test:
+        name: Unit tests
+        runs-on: ubuntu-latest
+        steps:
+            - name: Code checkout
+              uses: actions/checkout@v4
+
+            - name: Setup .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                dotnet-version: '8.0.x'
+            
+            - name: Unit test execution
+              working-directory: ./src
+              run: dotnet test ./Review-Filmes.Test.Unit/Review-Filmes.Test.Unit.csproj
+
+    Integration-Test:
+        name: Integration tests
+        runs-on: ubuntu-latest
+        services:
+          postgre:
+            image: postgre:17.5-alpine3.22
+            ports:
+              - 5432:5432
+            env:
+              POSTGRES_USER: review
+              POSTGRES_PASSWORD: postgrespwd
+              POSTGRES_DB: review-filmes
+        steps:
+          - name: Code checkout
+            uses: actions/checkout@v4
+
+          - name: Setup .NET
+            uses: actions/setup-dotnet@v4
+            with:
+                dotnet-version: '8.0.x'
+
+          - name: Integration test execution
+            working-directory: ./src
+            run: dotnet test ./Review-Filmes.Test.Integration/Review-Filmes.Test.Integration.csproj
+            env:
+              ConnectionStrings_DefaultConnection: "Host=localhost;Port=5432;Database=review-filmes;Username=review;Password=postgrespwd"
+    
+    Sonarqube:
+        name: Sonarqube code scan
+        runs-on: ubuntu-latest
+        steps:
+          - name: Code checkout
+            uses: actions/checkout@v4
+
+          - name: Setup .NET
+            uses: actions/setup-dotnet@v4
+            with:
+                dotnet-version: '8.0.x'
+
+          - name: JDK Setup
+            uses: actions/setup-java@v4
+            with:
+              distribution: adopt
+              java-version: '21'
+
+          - name: Sonarqube scanner install
+            run: dotnet tool install --global dotnet-sonarscanner
+
+          - name: Build and analysis
+            run: |
+            # sonar commands
+
+          - name: Quality Gate verification
+            uses: sonarsource/sonarqube-quality-gate-action@v1.2.0
+            id: sonarqube-quality-gate-check
+            with:
+                pollingTimeoutSec: 600
+                scanMetadataReportFile: ./src/.sonarqube/out/.sonar/report-task.txt
+            env:
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+          - name: SonarQube Quality Gate Status
+            if: ${{ always() }} #execute this step even if the pipeline fails
+            run: echo "The Quality Gate status is ${{ steps.sonarqube-quality-gate-check.outputs.quality-gate-status }}"

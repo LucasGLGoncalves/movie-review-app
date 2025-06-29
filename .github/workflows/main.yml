@@ -21,9 +21,14 @@ jobs:
       - name: .NET Build project
         working-directory: ./src
         run: dotnet build Review-Filmes.sln
+
+  Tests:
+    needs: [Build]
+    uses: LucasGLGoncalves/movie-review-app/.github/workflows/tests.yml@main
+    secrets: inherit
   
   Release:
-    needs: ['Build']
+    needs: [Tests]
     name: Create code release
     runs-on: ubuntu-latest
     steps:
