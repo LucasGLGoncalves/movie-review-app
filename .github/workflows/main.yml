@@ -1,0 +1,26 @@
+name: CI/CD Pipeline
+run-name: Pipeline executed by ${{ github.actor }}, run-number ${{ github.run_number }}
+on:
+  workflow_dispatch:
+#  push:
+#    branches:
+#      - main
+jobs:
+  CI:
+    name: Continuos integration bob
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          
+      - name: .NET Build project
+        working-directory: ./src
+        run: dotnet build Review-Filmes.sln
+  
+  CD:
+    needs: ['CI']
