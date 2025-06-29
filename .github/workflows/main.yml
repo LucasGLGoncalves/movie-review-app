@@ -64,6 +64,7 @@ jobs:
           format: sarif
           output: trivy-docker-result.sarif
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          # TO BLOCK THE DEPLOY IF REPROVED ON TRIVY SCAN
           #exit-code: '1'
           #ignore-unfixed: true
           #vuln-type: 'os,library'
